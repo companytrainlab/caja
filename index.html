@@ -53,6 +53,18 @@
   .garantia .estado{font-weight:700}
   .fundador{font-size:13.5px;line-height:1.6;color:#AAB3C5;border-left:3px solid #2E7DF6}
   .fundador .firma{margin-top:8px;color:#79839A;font-size:12.5px}
+  .applista{list-style:none}
+  .applista li{display:flex;gap:10px;font-size:14px;line-height:1.5;color:#C6CDDA;margin-bottom:10px}
+  .applista li:last-child{margin-bottom:0}
+  .refs{margin-top:16px;border-top:1px solid #232C3F;padding-top:13px}
+  .refs .reftit{font-size:11.5px;font-weight:700;color:#AAB3C5;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+  .refs p{font-size:12px;color:#79839A;line-height:1.55;margin-bottom:7px}
+  .refs p:last-child{margin-bottom:0}
+  .video-ph{aspect-ratio:16/9;border:1.5px dashed #2A3448;border-radius:14px;display:flex;flex-direction:column;
+        align-items:center;justify-content:center;gap:9px;color:#79839A;font-size:13px;text-align:center;padding:12px}
+  .video-ph .play{width:46px;height:46px;border-radius:50%;background:#232C3F;display:flex;
+        align-items:center;justify-content:center;font-size:17px;color:#EAEEF6;padding-left:4px}
+  .tarjeta video{width:100%;border-radius:12px;display:block}
   .pie{text-align:center;font-size:12px;color:#79839A;line-height:1.6;margin-top:18px}
   .pie a{color:#79839A}
   .cargando{text-align:center;color:#79839A;padding:40px 0;font-size:14px}
@@ -90,6 +102,17 @@
         "Entra en Salud → Pulsera y toca Buscar pulsera con el Bluetooth activado.",
         "Duerme con ella esta noche: mañana verás tu sueño, pulso en reposo y HRV.",
       ],
+      video: null, // cuando exista: "videos/control.mp4" en este mismo repo
+      queHace: [
+        "Convierte tu sueño, tu pulso en reposo y tu variabilidad (HRV) en una disponibilidad diaria de 0 a 100.",
+        "Lee la tendencia, no el día suelto: te dice cuándo apretar y cuándo aflojar.",
+        "Comparte tu recuperación con tu entrenador para que la carga se ajuste a cómo llegas de verdad.",
+      ],
+      ciencia: [
+        "Plews et al. (2013), Sports Medicine — la HRV como marcador de adaptación, interpretada en tendencia.",
+        "Saw et al. (2016), British Journal of Sports Medicine — el bienestar diario responde a la carga antes que muchos marcadores objetivos.",
+        "Kenttä y Hassmén (1998), Sports Medicine — el modelo de recuperación total que usa el motor de Control.",
+      ],
     },
     velocity: {
       nombre: "TrainLab Velocity", app: "TrainLab Velocity", esquema: "trainlabvelocity://",
@@ -100,6 +123,17 @@
         "Abre TrainLab Velocity (botón de abajo).",
         "Empareja el sensor por Bluetooth desde la pantalla de inicio.",
         "Haz una serie: verás la velocidad de cada repetición al momento.",
+      ],
+      video: null,
+      queHace: [
+        "Mide la velocidad de cada repetición y estima tu 1RM sin necesidad de ir al fallo.",
+        "Ajusta la carga del día según cómo llegas: entrenamiento basado en velocidad (VBT).",
+        "Corta la serie por pérdida de velocidad, antes de acumular fatiga que no suma.",
+      ],
+      ciencia: [
+        "González-Badillo y Sánchez-Medina (2010), International Journal of Sports Medicine — la velocidad como medida de la intensidad real.",
+        "Sánchez-Medina y González-Badillo (2011), Medicine & Science in Sports & Exercise — la pérdida de velocidad como indicador de fatiga neuromuscular.",
+        "Jidovtseff et al. (2011), Journal of Strength and Conditioning Research — la relación carga-velocidad para estimar el 1RM.",
       ],
     },
     force: {
@@ -112,6 +146,17 @@
         "Conecta el dinamómetro por Bluetooth.",
         "Antes del primer test, sigue la calibración guiada de la app.",
       ],
+      video: null,
+      queHace: [
+        "Mide tu fuerza máxima isométrica y tu explosividad (RFD) sin mover cargas peligrosas.",
+        "Compara izquierda y derecha: las asimetrías por encima del 10-15 % encienden el semáforo.",
+        "Sigue tu readaptación con datos objetivos, test a test.",
+      ],
+      ciencia: [
+        "Bishop, Turner y Read (2018), Journal of Sports Sciences — las asimetrías entre lados y su efecto en el rendimiento.",
+        "Ardern et al. (2016), British Journal of Sports Medicine — el consenso de Berna sobre la vuelta al deporte.",
+        "Buckthorpe (2019), Sports Medicine — criterios objetivos en la fase final de la readaptación.",
+      ],
     },
     signal: {
       nombre: "TrainLab Signal", app: "TrainLab Signal", esquema: "trainlabsignal://",
@@ -122,6 +167,16 @@
         "Abre TrainLab Signal (botón de abajo).",
         "Conecta el sensor por Bluetooth.",
         "Haz una contracción máxima (MVC) para calibrar la escala.",
+      ],
+      video: null,
+      queHace: [
+        "Mide la activación real del músculo (EMG de superficie) mientras trabajas.",
+        "Expresa cada ejercicio como porcentaje de tu contracción máxima (MVC): intensidad comparable entre días.",
+        "Detecta asimetrías de activación en la readaptación antes de que se vean a simple vista.",
+      ],
+      ciencia: [
+        "Hermens et al. (2000), Journal of Electromyography and Kinesiology — SENIAM, el estándar europeo de colocación y registro de EMG de superficie.",
+        "De Luca (1997), Journal of Applied Biomechanics — el uso correcto de la electromiografía de superficie en biomecánica.",
       ],
     },
   };
@@ -228,6 +283,51 @@
     return t;
   }
 
+  // Qué hace la app y en qué ciencia se apoya. Las referencias salen del
+  // documento de fundamento científico de TrainLab: aquí no se promete
+  // nada que el dossier no pueda defender.
+  function tarjetaApp(f) {
+    var t = el("div", "tarjeta");
+    t.append(el("h2", null, "Qué hace " + f.app));
+    var ul = el("ul", "applista");
+    f.queHace.forEach(function (q) {
+      var li = el("li");
+      var check = el("span", null, "✓");
+      check.style.color = f.color; check.style.fontWeight = "700";
+      li.append(check, el("span", null, q));
+      ul.append(li);
+    });
+    var refs = el("div", "refs");
+    refs.append(el("p", "reftit", "La ciencia que lo sostiene"));
+    f.ciencia.forEach(function (r) { refs.append(el("p", null, r)); });
+    t.append(ul, refs);
+    return t;
+  }
+
+  // El vídeo explicativo de la app. Hasta que exista (f.video = ruta del
+  // mp4 en este repo), un hueco elegante que no promete fechas.
+  function tarjetaVideo(f) {
+    var t = el("div", "tarjeta");
+    t.append(el("h2", null, "La app, en vídeo"));
+    if (f.video) {
+      var v = document.createElement("video");
+      v.src = f.video;
+      v.controls = true;
+      v.playsInline = true;
+      v.preload = "metadata";
+      t.append(v);
+    } else {
+      var ph = el("div", "video-ph");
+      ph.append(
+        el("div", "play", "▶"),
+        el("span", null, "Estamos grabando el vídeo de " + f.app + "."),
+        el("span", null, "Mientras tanto, los pasos de arriba te llevan igual de lejos.")
+      );
+      t.append(ph);
+    }
+    return t;
+  }
+
   function botonWeb() {
     var b = el("a", "boton-sec", "Descubrir TrainLab");
     b.href = WEB;
@@ -253,6 +353,8 @@
       tarjetaProducto(f, caja, codigo),
       tarjetaPasos(f),
       botonApp(f, codigo),
+      tarjetaVideo(f),
+      tarjetaApp(f),
       tarjetaGarantia(estadoGarantia, caja, codigo),
       tarjetaFundador(),
       botonWeb()
