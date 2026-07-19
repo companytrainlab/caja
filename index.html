@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>TrainLab · tu caja</title>
+<!--
+  El landing del tag NFC de la caja. El tag graba:
+
+      https://companytrainlab.github.io/caja/#CODIGO
+
+  Esta página lee el código del #hash, pide los datos a la API
+  (Edge Function `caja` de Supabase, que además cuenta el tap) y
+  pinta la guía del producto correcto y el estado de la garantía.
+
+  Los datos de la API se insertan SIEMPRE con textContent, nunca
+  con innerHTML: lo que venga de fuera no puede ejecutar nada.
+-->
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0E1117;color:#EAEEF6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+       min-height:100vh;display:flex;justify-content:center;padding:24px 16px}
+  .caja{max-width:430px;width:100%}
+  .marca{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:20px}
+  .marca .train{color:#79839A}.marca .lab{color:#2E7DF6}
+  .tarjeta{background:#181F2E;border-radius:18px;padding:22px;margin-bottom:14px}
+  .chip{display:inline-block;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+        padding:5px 12px;border-radius:999px;margin-bottom:12px}
+  h1{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
+  .que-es{color:#AAB3C5;font-size:15px;line-height:1.5}
+  .serie{margin-top:14px;font-size:13px;color:#79839A}
+  .serie b{color:#EAEEF6;font-weight:600}
+  h2{font-size:15px;font-weight:700;margin-bottom:12px;color:#EAEEF6}
+  ol{list-style:none;counter-reset:paso}
+  ol li{counter-increment:paso;display:flex;gap:12px;font-size:14.5px;line-height:1.45;color:#C6CDDA;margin-bottom:12px}
+  ol li::before{content:counter(paso);flex:0 0 24px;height:24px;border-radius:50%;background:#232C3F;
+        color:#EAEEF6;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  ol li:last-child{margin-bottom:0}
+  .boton{display:block;text-align:center;text-decoration:none;font-size:16px;font-weight:700;
+         padding:15px;border-radius:14px;margin-bottom:10px}
+  .aviso{display:none;background:#181F2E;border:1px solid #232C3F;border-radius:14px;padding:14px;
+         font-size:13.5px;line-height:1.5;color:#AAB3C5;margin-bottom:14px}
+  .aviso.visible{display:block}
+  .aviso a{color:#2E7DF6;text-decoration:none}
+  .garantia{font-size:13.5px;line-height:1.5;color:#AAB3C5}
+  .garantia .estado{font-weight:700}
+  .pie{text-align:center;font-size:12px;color:#79839A;line-height:1.6;margin-top:18px}
+  .pie a{color:#79839A}
+  .cargando{text-align:center;color:#79839A;padding:40px 0;font-size:14px}
+  @keyframes late{50%{opacity:.35}}
+  .cargando span{animation:late 1.2s ease-in-out infinite}
+</style>
+</head>
+<body>
+<div class="caja">
+  <div class="marca"><span class="train">Train</span><span class="lab">Lab</span></div>
+  <div id="contenido"><p class="cargando"><span>Leyendo tu caja…</span></p></div>
+  <p class="pie" id="pie"></p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var API = "https://owzxkjnxipjalnprghmy.supabase.co/functions/v1/caja/";
+  var SOPORTE = "companytrainlab@gmail.com";
+
+  // La ficha de cada producto: color de familia (manual de marca),
+  // qué es y los primeros pasos. Es la guía de usuario del landing.
+  var FICHAS = {
+    control: {
+      nombre: "TrainLab Control", color: "#AF52DE", tinta: "#FFFFFF",
+      queEs: "Tu pulsera de recuperación: mide el corazón, el sueño y la variabilidad para saber cuándo apretar y cuándo aflojar.",
+      pasos: [
+        "Carga la pulsera con su cable hasta que la pantalla se encienda.",
+        "Abre TrainLab en tu iPhone (botón de abajo).",
+        "Entra en Salud → Pulsera y toca Buscar pulsera con el Bluetooth activado.",
+        "Duerme con ella esta noche: mañana verás tu sueño, pulso en reposo y HRV.",
+      ],
+    },
+    velocity: {
+      nombre: "TrainLab Velocity", color: "#17AEC9", tinta: "#FFFFFF",
+      queEs: "El sensor de barra: mide la velocidad de cada repetición para entrenar con cargas óptimas.",
+      pasos: [
+        "Fija el sensor a la barra con el imán y asegúralo con la correa de velcro.",
+        "Abre TrainLab Velocity (botón de abajo).",
+        "Empareja el sensor por Bluetooth desde la pantalla de inicio.",
+        "Haz una serie: verás la velocidad de cada repetición al momento.",
+      ],
+    },
+    force: {
+      nombre: "TrainLab Force", color: "#FF9500", tinta: "#141A28",
+      queEs: "El dinamómetro: mide la fuerza máxima y la simetría entre lados en tests isométricos.",
+      pasos: [
+        "Ancla la célula de carga entre el punto fijo y el agarre, sin holguras.",
+        "Abre TrainLab Force (botón de abajo).",
+        "Conecta el dinamómetro por Bluetooth.",
+        "Antes del primer test, sigue la calibración guiada de la app.",
+      ],
+    },
+    signal: {
+      nombre: "TrainLab Signal", color: "#FFD60A", tinta: "#141A28",
+      queEs: "El sensor EMG: mide la activación muscular real para valorar readaptaciones y asimetrías.",
+      pasos: [
+        "Limpia la piel y coloca los electrodos sobre el vientre del músculo.",
+        "Abre TrainLab Signal (botón de abajo).",
+        "Conecta el sensor por Bluetooth.",
+        "Haz una contracción máxima (MVC) para calibrar la escala.",
+      ],
+    },
+  };
+
+  var contenido = document.getElementById("contenido");
+  var pie = document.getElementById("pie");
+
+  // Piezas del DOM sin innerHTML para todo dato variable.
+  function el(tag, clase, texto) {
+    var n = document.createElement(tag);
+    if (clase) n.className = clase;
+    if (texto != null) n.textContent = texto;
+    return n;
+  }
+
+  function pieSoporte(asunto) {
+    pie.textContent = "";
+    var a = el("a", null, SOPORTE);
+    a.href = "mailto:" + SOPORTE + "?subject=" + encodeURIComponent(asunto);
+    pie.append("¿Dudas o algún problema? ", a, document.createElement("br"), "TrainLab · hecho en España");
+  }
+
+  function pintarCaja(caja) {
+    var f = FICHAS[caja.producto] || FICHAS.control;
+    document.title = f.nombre + " · caja " + caja.codigo;
+    contenido.textContent = "";
+
+    var t1 = el("div", "tarjeta");
+    var chip = el("span", "chip", f.nombre.replace("TrainLab ", ""));
+    chip.style.background = f.color; chip.style.color = f.tinta;
+    var serie = el("p", "serie");
+    serie.append("Producto original · Nº de serie ", el("b", null, caja.numero_serie),
+                 " · Caja ", el("b", null, caja.codigo));
+    t1.append(chip, el("h1", null, f.nombre), el("p", "que-es", f.queEs), serie);
+
+    var t2 = el("div", "tarjeta");
+    t2.append(el("h2", null, "Primeros pasos"));
+    var lista = document.createElement("ol");
+    f.pasos.forEach(function (p) { lista.append(el("li", null, p)); });
+    t2.append(lista);
+
+    var boton = el("a", "boton", "Abrir en TrainLab");
+    boton.style.background = f.color; boton.style.color = f.tinta;
+    boton.href = "trainlab://caja/" + caja.codigo;
+
+    // Si la app no está instalada, el enlace trainlab:// no hace nada:
+    // pasado un momento sin que el sistema pause la página (la app en
+    // primer plano la congela), enseñamos el plan B de la beta.
+    var aviso = el("div", "aviso");
+    var mail = el("a", null, SOPORTE);
+    mail.href = "mailto:" + SOPORTE + "?subject=" + encodeURIComponent("Acceso beta · caja " + caja.codigo);
+    aviso.append("¿No se ha abierto nada? TrainLab está en beta privada: escribe a ", mail,
+                 " con este código y te enviamos la invitación con tu plan ya incluido.");
+    boton.addEventListener("click", function () {
+      var t0 = Date.now();
+      setTimeout(function () {
+        if (Date.now() - t0 < 2400 && !document.hidden) aviso.classList.add("visible");
+      }, 1800);
+    });
+
+    var t3 = el("div", "tarjeta garantia");
+    t3.append(el("h2", null, "Garantía"));
+    var g = el("p");
+    if (caja.activada_at) {
+      var fecha = new Date(caja.activada_at).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+      var estado = el("span", "estado", "Activa"); estado.style.color = "#34C759";
+      g.append(estado, " desde el " + fecha + ". Cubre 3 años desde la activación; guarda esta caja o el código ",
+               el("b", null, caja.codigo), " para cualquier gestión.");
+    } else {
+      var pendiente = el("span", "estado", "Pendiente de activar."); pendiente.style.color = "#FF9500";
+      g.append(pendiente, " Abre la app con el botón de arriba y la garantía de 3 años quedará registrada a tu nombre automáticamente.");
+    }
+    t3.append(g);
+
+    contenido.append(t1, t2, boton, aviso, t3);
+    pieSoporte("Soporte · caja " + caja.codigo);
+  }
+
+  function pintarDesconocida(codigo) {
+    document.title = "TrainLab · código no reconocido";
+    contenido.textContent = "";
+    var t = el("div", "tarjeta");
+    var p = el("p", "que-es");
+    p.style.marginTop = "8px";
+    p.append("El código ", el("b", null, codigo || "(vacío)"),
+      " no corresponde a ninguna caja registrada de TrainLab. Si acabas de comprar el producto, puede tratarse de un error de lectura — o de una unidad no original.");
+    t.append(el("h1", null, "Código no reconocido"), p,
+             el("p", "serie", "Escríbenos con una foto de la caja y lo comprobamos al momento."));
+    var boton = el("a", "boton", "Escribir a soporte");
+    boton.style.background = "#2E7DF6"; boton.style.color = "#fff";
+    boton.href = "mailto:" + SOPORTE + "?subject=" + encodeURIComponent("Código no reconocido · " + codigo);
+    contenido.append(t, boton);
+    pieSoporte("Código no reconocido · " + codigo);
+  }
+
+  function pintarError() {
+    contenido.textContent = "";
+    var t = el("div", "tarjeta");
+    t.append(el("h1", null, "Sin conexión"),
+             el("p", "que-es", "No hemos podido leer los datos de tu caja. Comprueba la conexión y recarga la página."));
+    contenido.append(t);
+    pieSoporte("No carga el landing de la caja");
+  }
+
+  function arrancar() {
+    var codigo = decodeURIComponent(location.hash.replace(/^#/, "")).trim().toUpperCase();
+    if (!/^[A-HJ-NP-Z2-9]{6}$/.test(codigo)) { pintarDesconocida(codigo); return; }
+
+    fetch(API + codigo, { headers: { Accept: "application/json" } })
+      .then(function (r) {
+        if (r.status === 404) { pintarDesconocida(codigo); return null; }
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (caja) { if (caja) pintarCaja(caja); })
+      .catch(pintarError);
+  }
+
+  // Si el #hash llega o cambia después de cargar (algún navegador o
+  // lector NFC lo añade tarde), la página se repinta sola.
+  window.addEventListener("hashchange", arrancar);
+  arrancar();
+})();
+</script>
+<noscript><p style="text-align:center;color:#AAB3C5">Esta página necesita JavaScript. Escríbenos a companytrainlab@gmail.com con el código de tu caja.</p></noscript>
+</body>
+</html>
