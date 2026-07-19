@@ -42,6 +42,9 @@
   ol li:last-child{margin-bottom:0}
   .boton{display:block;text-align:center;text-decoration:none;font-size:16px;font-weight:700;
          padding:15px;border-radius:14px;margin-bottom:10px}
+  .boton-sec{display:block;text-align:center;text-decoration:none;font-size:14.5px;font-weight:700;
+         padding:13px;border-radius:14px;margin-bottom:14px;color:#2E7DF6;
+         background:transparent;border:1.5px solid #2E7DF6}
   .aviso{display:none;background:#181F2E;border:1px solid #232C3F;border-radius:14px;padding:14px;
          font-size:13.5px;line-height:1.5;color:#AAB3C5;margin-bottom:14px}
   .aviso.visible{display:block}
@@ -69,6 +72,7 @@
   "use strict";
   var API = "https://owzxkjnxipjalnprghmy.supabase.co/functions/v1/caja/";
   var SOPORTE = "companytrainlab@gmail.com";
+  var WEB = "https://companytrainlab.github.io/";
   var RE_CODIGO = /^[A-HJ-NP-Z2-9]{6}$/;
 
   // La ficha de cada producto: color de familia (manual de marca), qué
@@ -224,6 +228,12 @@
     return t;
   }
 
+  function botonWeb() {
+    var b = el("a", "boton-sec", "Descubrir TrainLab");
+    b.href = WEB;
+    return b;
+  }
+
   function tarjetaFundador() {
     var t = el("div", "tarjeta fundador");
     t.append(
@@ -244,7 +254,8 @@
       tarjetaPasos(f),
       botonApp(f, codigo),
       tarjetaGarantia(estadoGarantia, caja, codigo),
-      tarjetaFundador()
+      tarjetaFundador(),
+      botonWeb()
     );
     pieSoporte("Soporte · caja " + codigo);
   }
@@ -255,7 +266,7 @@
     var t = el("div", "tarjeta");
     t.append(el("h1", null, "Tu caja TrainLab"),
              el("p", "que-es", "Acerca el móvil al símbolo NFC de la caja (o escanea su código QR) y aquí aparecerán tu guía de primeros pasos y tu garantía."));
-    contenido.append(t);
+    contenido.append(t, botonWeb());
     pieSoporte("Mi caja TrainLab");
   }
 
