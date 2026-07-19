@@ -70,6 +70,37 @@
   .cargando{text-align:center;color:#79839A;padding:40px 0;font-size:14px}
   @keyframes late{50%{opacity:.35}}
   .cargando span{animation:late 1.2s ease-in-out infinite}
+
+  /* Entrada de las tarjetas: sube y aparece, en cascada. */
+  @keyframes subir{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .anima{animation:subir .5s ease both}
+
+  /* Pasos marcables: toca un paso y queda hecho (se guarda en el móvil). */
+  ol li{cursor:pointer;-webkit-tap-highlight-color:transparent}
+  ol li.hecha::before{content:"✓";background:var(--acento,#2E7DF6);color:#141A28}
+  ol li.hecha span{color:#79839A}
+  .progreso{font-size:12.5px;color:#79839A;margin:-6px 0 12px}
+  .progreso b{color:#EAEEF6}
+
+  /* La gráfica demo: lo que verás en la app, sin salir de la caja. */
+  .grafica{margin:2px 0 16px}
+  .grafica svg{width:100%;height:auto;display:block}
+  .grafica .leyenda{font-size:12px;color:#79839A;margin-top:7px;text-align:center;line-height:1.5}
+  .g-linea{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;
+        stroke-dasharray:600;stroke-dashoffset:600;animation:trazar 1.6s .3s ease forwards}
+  @keyframes trazar{to{stroke-dashoffset:0}}
+  .g-barra{transform-origin:bottom;transform:scaleY(0);animation:crecer .7s ease forwards}
+  .g-hbarra{transform-origin:left;transform:scaleX(0);animation:crecerx .8s .2s ease forwards}
+  @keyframes crecer{to{transform:scaleY(1)}}
+  @keyframes crecerx{to{transform:scaleX(1)}}
+  .g-punto{opacity:0;animation:aparecer .3s ease forwards}
+  @keyframes aparecer{to{opacity:1}}
+
+  .g-barra,.g-hbarra{transform-box:fill-box}
+
+  @media (prefers-reduced-motion: reduce){
+    .anima,.g-linea,.g-barra,.g-hbarra,.g-punto{animation:none;opacity:1;transform:none;stroke-dashoffset:0}
+  }
 </style>
 </head>
 <body>
@@ -225,12 +256,46 @@
     return t;
   }
 
-  function tarjetaPasos(f) {
+  // Los pasos se pueden marcar con un toque y quedan guardados en el
+  // móvil (por caja): quien retoma el estreno más tarde sabe por dónde iba.
+  function tarjetaPasos(f, codigo) {
     var t = el("div", "tarjeta");
     t.append(el("h2", null, "Primeros pasos"));
+    var progreso = el("p", "progreso");
     var lista = document.createElement("ol");
-    f.pasos.forEach(function (p) { lista.append(el("li", null, p)); });
-    t.append(lista);
+    var clave = "pasos:" + codigo;
+    var hechos = [];
+    try { hechos = JSON.parse(localStorage.getItem(clave)) || []; } catch (e) {}
+
+    function pintarProgreso() {
+      progreso.textContent = "";
+      var n = lista.querySelectorAll(".hecha").length;
+      if (n === f.pasos.length) {
+        progreso.append("¡Lista! Tu ", el("b", null, f.app.replace("TrainLab ", "") || "caja"), " está en marcha. 🎉");
+      } else {
+        progreso.append("Toca cada paso al completarlo — llevas ", el("b", null, n + " de " + f.pasos.length), ".");
+      }
+    }
+
+    f.pasos.forEach(function (p, i) {
+      var li = el("li");
+      li.style.setProperty("--acento", f.color);
+      li.append(el("span", null, p));
+      if (hechos.indexOf(i) !== -1) li.classList.add("hecha");
+      li.addEventListener("click", function () {
+        li.classList.toggle("hecha");
+        var ahora = [];
+        lista.querySelectorAll("li").forEach(function (x, j) {
+          if (x.classList.contains("hecha")) ahora.push(j);
+        });
+        try { localStorage.setItem(clave, JSON.stringify(ahora)); } catch (e) {}
+        pintarProgreso();
+      });
+      lista.append(li);
+    });
+
+    pintarProgreso();
+    t.append(progreso, lista);
     return t;
   }
 
@@ -283,12 +348,85 @@
     return t;
   }
 
+  // La gráfica demo de cada producto: SVG propio, datos de ejemplo,
+  // cero librerías. Es estática y nuestra (sin datos de fuera), así
+  // que puede ir por innerHTML sin riesgo.
+  function graficaDe(producto, color) {
+    var eje = '#232C3F', texto = '#79839A';
+    if (producto === "control") {
+      // Disponibilidad de una semana: la tendencia manda.
+      var v = [62, 58, 71, 76, 69, 83, 88], dias = ["L", "M", "X", "J", "V", "S", "D"];
+      var pts = v.map(function (n, i) { return (20 + i * 50) + "," + (125 - n); }).join(" ");
+      var puntos = v.map(function (n, i) {
+        return '<circle class="g-punto" style="animation-delay:' + (0.3 + i * 0.18) + 's" cx="' + (20 + i * 50) + '" cy="' + (125 - n) + '" r="4" fill="' + color + '"/>';
+      }).join("");
+      var etiquetas = dias.map(function (d, i) {
+        return '<text x="' + (20 + i * 50) + '" y="139" font-size="10" fill="' + texto + '" text-anchor="middle">' + d + '</text>';
+      }).join("");
+      return {
+        svg: '<svg viewBox="0 0 340 142" aria-hidden="true">' +
+          '<line x1="12" y1="25" x2="328" y2="25" stroke="' + eje + '" stroke-dasharray="3 4"/>' +
+          '<line x1="12" y1="75" x2="328" y2="75" stroke="' + eje + '" stroke-dasharray="3 4"/>' +
+          '<text x="330" y="28" font-size="9" fill="' + texto + '" text-anchor="end">100</text>' +
+          '<polyline class="g-linea" points="' + pts + '" stroke="' + color + '"/>' +
+          puntos + etiquetas + '</svg>',
+        leyenda: "Tu disponibilidad diaria, en tendencia: la app te dice cuándo apretar y cuándo aflojar.",
+      };
+    }
+    if (producto === "velocity") {
+      // Velocidad por repetición: la serie se corta antes de la fatiga inútil.
+      var reps = [0.82, 0.79, 0.76, 0.71, 0.65, 0.58];
+      var corteY = 125 - 0.82 * 0.8 * 130;
+      var barras = reps.map(function (n, i) {
+        var h = n * 130, lenta = n < 0.82 * 0.8;
+        return '<rect class="g-barra" style="animation-delay:' + (0.15 + i * 0.12) + 's" x="' + (25 + i * 50) + '" y="' + (125 - h) + '" width="34" height="' + h + '" rx="5" fill="' + color + '"' + (lenta ? ' opacity="0.3"' : '') + '/>';
+      }).join("");
+      return {
+        svg: '<svg viewBox="0 0 340 142" aria-hidden="true">' + barras +
+          '<line x1="12" y1="' + corteY + '" x2="328" y2="' + corteY + '" stroke="' + texto + '" stroke-dasharray="4 4"/>' +
+          '<text x="326" y="' + (corteY - 5) + '" font-size="9.5" fill="' + texto + '" text-anchor="end">corte −20 %</text>' +
+          '<text x="20" y="139" font-size="10" fill="' + texto + '">velocidad de cada repetición (m/s)</text></svg>',
+        leyenda: "Cuando la barra pierde el 20 % de velocidad, la app corta la serie: fatiga que no suma.",
+      };
+    }
+    if (producto === "force") {
+      // Izquierda contra derecha: la asimetría se ve de un vistazo.
+      return {
+        svg: '<svg viewBox="0 0 340 118" aria-hidden="true">' +
+          '<text x="14" y="43" font-size="11" fill="' + texto + '">Izq</text>' +
+          '<rect class="g-hbarra" x="48" y="26" width="252" height="26" rx="7" fill="' + color + '"/>' +
+          '<text x="292" y="43" font-size="11" font-weight="700" fill="#141A28" text-anchor="end">412 N</text>' +
+          '<text x="14" y="90" font-size="11" fill="' + texto + '">Der</text>' +
+          '<rect class="g-hbarra" style="animation-delay:.4s" x="48" y="73" width="227" height="26" rx="7" fill="' + color + '" opacity="0.55"/>' +
+          '<text x="267" y="90" font-size="11" font-weight="700" fill="#141A28" text-anchor="end">371 N</text>' +
+          '</svg>',
+        leyenda: "Fuerza máxima de cada lado: al bajar del 90 % de simetría, el semáforo avisa.",
+      };
+    }
+    // signal: la envolvente EMG de dos repeticiones frente al máximo.
+    return {
+      svg: '<svg viewBox="0 0 340 132" aria-hidden="true">' +
+        '<line x1="12" y1="26" x2="328" y2="26" stroke="' + texto + '" stroke-dasharray="4 4"/>' +
+        '<text x="326" y="21" font-size="9.5" fill="' + texto + '" text-anchor="end">100 % MVC</text>' +
+        '<path d="M14,112 C40,112 48,40 82,38 C112,36 118,96 150,102 C166,105 172,112 186,112 C210,112 218,48 250,46 C278,44 286,98 326,108" ' +
+        'fill="' + color + '" fill-opacity="0.13" stroke="none"/>' +
+        '<path class="g-linea" d="M14,112 C40,112 48,40 82,38 C112,36 118,96 150,102 C166,105 172,112 186,112 C210,112 218,48 250,46 C278,44 286,98 326,108" stroke="' + color + '"/>' +
+        '<text x="20" y="128" font-size="10" fill="' + texto + '">activación muscular en dos repeticiones</text></svg>',
+      leyenda: "La activación real del músculo, medida contra tu contracción máxima (MVC).",
+    };
+  }
+
   // Qué hace la app y en qué ciencia se apoya. Las referencias salen del
   // documento de fundamento científico de TrainLab: aquí no se promete
   // nada que el dossier no pueda defender.
-  function tarjetaApp(f) {
+  function tarjetaApp(f, producto) {
     var t = el("div", "tarjeta");
     t.append(el("h2", null, "Qué hace " + f.app));
+    var g = graficaDe(producto, f.color);
+    var grafica = el("div", "grafica");
+    grafica.innerHTML = g.svg + '<p class="leyenda"></p>';
+    grafica.querySelector(".leyenda").textContent = g.leyenda;
+    t.append(grafica);
     var ul = el("ul", "applista");
     f.queHace.forEach(function (q) {
       var li = el("li");
@@ -351,15 +489,29 @@
     contenido.textContent = "";
     contenido.append(
       tarjetaProducto(f, caja, codigo),
-      tarjetaPasos(f),
+      tarjetaPasos(f, codigo),
       botonApp(f, codigo),
       tarjetaVideo(f),
-      tarjetaApp(f),
+      tarjetaApp(f, producto),
       tarjetaGarantia(estadoGarantia, caja, codigo),
       tarjetaFundador(),
       botonWeb()
     );
+    animar();
     pieSoporte("Soporte · caja " + codigo);
+  }
+
+  // La cascada de entrada: cada pieza sube con un pelín de retraso
+  // sobre la anterior. Solo la primera pintura; los repintados por
+  // red o caché no vuelven a animar (sería mareante).
+  var yaAnimado = false;
+  function animar() {
+    if (yaAnimado) return;
+    yaAnimado = true;
+    Array.prototype.forEach.call(contenido.children, function (n, i) {
+      n.classList.add("anima");
+      n.style.animationDelay = (i * 0.07) + "s";
+    });
   }
 
   function pintarPortada() {
@@ -369,6 +521,7 @@
     t.append(el("h1", null, "Tu caja TrainLab"),
              el("p", "que-es", "Acerca el móvil al símbolo NFC de la caja (o escanea su código QR) y aquí aparecerán tu guía de primeros pasos y tu garantía."));
     contenido.append(t, botonWeb());
+    animar();
     pieSoporte("Mi caja TrainLab");
   }
 
