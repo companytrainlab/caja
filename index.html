@@ -125,7 +125,10 @@
     pie.textContent = "";
     var a = el("a", null, SOPORTE);
     a.href = "mailto:" + SOPORTE + "?subject=" + encodeURIComponent(asunto);
-    pie.append("¿Dudas o algún problema? ", a, document.createElement("br"), "TrainLab · hecho en España");
+    // La caja presenta a la marca: el nombre lleva a la web del ecosistema.
+    var marca = el("a", null, "TrainLab");
+    marca.href = "https://companytrainlab.github.io/";
+    pie.append("¿Dudas o algún problema? ", a, document.createElement("br"), marca, " · hecho en España");
   }
 
   function pintarCaja(caja) {
