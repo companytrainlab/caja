@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>TrainLab · tu caja</title>
+<!--
+  Red de seguridad: si alguien teclea la URL sin la almohadilla
+  (…/caja/control-ABC123 en vez de …/caja/#control-ABC123), GitHub
+  Pages sirve este 404, que lo convierte al formato bueno y redirige.
+-->
+<script>
+  (function () {
+    var m = location.pathname.match(/^\/caja\/([A-Za-z0-9-]{1,40})\/?$/);
+    location.replace("/caja/" + (m ? "#" + m[1] : ""));
+  })();
+</script>
+</head>
+<body style="background:#0E1117;color:#AAB3C5;font-family:-apple-system,sans-serif;text-align:center;padding:40px 16px">
+<p>Llevándote a tu caja… Si no salta, ve a <a style="color:#2E7DF6" href="/caja/">companytrainlab.github.io/caja</a>.</p>
+</body>
+</html>

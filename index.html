@@ -8,14 +8,17 @@
 <!--
   El landing del tag NFC de la caja. El tag graba:
 
-      https://companytrainlab.github.io/caja/#CODIGO
+      https://companytrainlab.github.io/caja/#producto-CODIGO
+      (p. ej. #control-RWJNCB; el formato viejo #CODIGO sigue valiendo)
 
-  Esta página lee el código del #hash, pide los datos a la API
-  (Edge Function `caja` de Supabase, que además cuenta el tap) y
-  pinta la guía del producto correcto y el estado de la garantía.
+  El producto viaja en el propio hash A PROPÓSITO: la guía de primeros
+  pasos y el botón de la app funcionan AL INSTANTE y SIN COBERTURA
+  (unboxing en un gimnasio de sótano). La red solo añade lo vivo:
+  número de serie y estado de la garantía, con caché local para que
+  la segunda visita sea inmediata incluso offline.
 
-  Los datos de la API se insertan SIEMPRE con textContent, nunca
-  con innerHTML: lo que venga de fuera no puede ejecutar nada.
+  Los datos de la API se insertan SIEMPRE con textContent, nunca con
+  innerHTML: lo que venga de fuera no puede ejecutar nada.
 -->
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
@@ -45,6 +48,8 @@
   .aviso a{color:#2E7DF6;text-decoration:none}
   .garantia{font-size:13.5px;line-height:1.5;color:#AAB3C5}
   .garantia .estado{font-weight:700}
+  .fundador{font-size:13.5px;line-height:1.6;color:#AAB3C5;border-left:3px solid #2E7DF6}
+  .fundador .firma{margin-top:8px;color:#79839A;font-size:12.5px}
   .pie{text-align:center;font-size:12px;color:#79839A;line-height:1.6;margin-top:18px}
   .pie a{color:#79839A}
   .cargando{text-align:center;color:#79839A;padding:40px 0;font-size:14px}
@@ -64,12 +69,16 @@
   "use strict";
   var API = "https://owzxkjnxipjalnprghmy.supabase.co/functions/v1/caja/";
   var SOPORTE = "companytrainlab@gmail.com";
+  var RE_CODIGO = /^[A-HJ-NP-Z2-9]{6}$/;
 
-  // La ficha de cada producto: color de familia (manual de marca),
-  // qué es y los primeros pasos. Es la guía de usuario del landing.
+  // La ficha de cada producto: color de familia (manual de marca), qué
+  // app abre su botón (cada producto tiene la suya), qué es y los
+  // primeros pasos. Es la guía de usuario del landing, y funciona
+  // entera sin red porque el producto viene en el propio hash.
   var FICHAS = {
     control: {
-      nombre: "TrainLab Control", color: "#AF52DE", tinta: "#FFFFFF",
+      nombre: "TrainLab Control", app: "TrainLab", esquema: "trainlab://",
+      color: "#AF52DE", tinta: "#FFFFFF",
       queEs: "Tu pulsera de recuperación: mide el corazón, el sueño y la variabilidad para saber cuándo apretar y cuándo aflojar.",
       pasos: [
         "Carga la pulsera con su cable hasta que la pantalla se encienda.",
@@ -79,7 +88,8 @@
       ],
     },
     velocity: {
-      nombre: "TrainLab Velocity", color: "#17AEC9", tinta: "#FFFFFF",
+      nombre: "TrainLab Velocity", app: "TrainLab Velocity", esquema: "trainlabvelocity://",
+      color: "#17AEC9", tinta: "#FFFFFF",
       queEs: "El sensor de barra: mide la velocidad de cada repetición para entrenar con cargas óptimas.",
       pasos: [
         "Fija el sensor a la barra con el imán y asegúralo con la correa de velcro.",
@@ -89,7 +99,8 @@
       ],
     },
     force: {
-      nombre: "TrainLab Force", color: "#FF9500", tinta: "#141A28",
+      nombre: "TrainLab Force", app: "TrainLab Force", esquema: "trainlabforce://",
+      color: "#FF9500", tinta: "#141A28",
       queEs: "El dinamómetro: mide la fuerza máxima y la simetría entre lados en tests isométricos.",
       pasos: [
         "Ancla la célula de carga entre el punto fijo y el agarre, sin holguras.",
@@ -99,7 +110,8 @@
       ],
     },
     signal: {
-      nombre: "TrainLab Signal", color: "#FFD60A", tinta: "#141A28",
+      nombre: "TrainLab Signal", app: "TrainLab Signal", esquema: "trainlabsignal://",
+      color: "#FFD60A", tinta: "#141A28",
       queEs: "El sensor EMG: mide la activación muscular real para valorar readaptaciones y asimetrías.",
       pasos: [
         "Limpia la piel y coloca los electrodos sobre el vientre del músculo.",
@@ -125,41 +137,56 @@
     pie.textContent = "";
     var a = el("a", null, SOPORTE);
     a.href = "mailto:" + SOPORTE + "?subject=" + encodeURIComponent(asunto);
-    // La caja presenta a la marca: el nombre lleva a la web del ecosistema.
-    var marca = el("a", null, "TrainLab");
-    marca.href = "https://companytrainlab.github.io/";
-    pie.append("¿Dudas o algún problema? ", a, document.createElement("br"), marca, " · hecho en España");
+    pie.append("¿Dudas o algún problema? ", a, document.createElement("br"), "TrainLab · hecho en España");
   }
 
-  function pintarCaja(caja) {
-    var f = FICHAS[caja.producto] || FICHAS.control;
-    document.title = f.nombre + " · caja " + caja.codigo;
-    contenido.textContent = "";
+  // Caché local: la segunda visita pinta serie y garantía al instante,
+  // incluso sin cobertura. La red, cuando vuelva, lo refresca.
+  function cacheLeer(codigo) {
+    try { return JSON.parse(localStorage.getItem("caja:" + codigo)); } catch (e) { return null; }
+  }
+  function cacheGuardar(caja) {
+    try { localStorage.setItem("caja:" + caja.codigo, JSON.stringify(caja)); } catch (e) {}
+  }
 
-    var t1 = el("div", "tarjeta");
-    var chip = el("span", "chip", f.nombre.replace("TrainLab ", ""));
+  // ---- Las tarjetas ----
+
+  function tarjetaProducto(f, caja, codigo) {
+    var t = el("div", "tarjeta");
+    var chip = el("span", "chip", f.nombre.replace("TrainLab ", "") || "TrainLab");
     chip.style.background = f.color; chip.style.color = f.tinta;
     var serie = el("p", "serie");
-    serie.append("Producto original · Nº de serie ", el("b", null, caja.numero_serie),
-                 " · Caja ", el("b", null, caja.codigo));
-    t1.append(chip, el("h1", null, f.nombre), el("p", "que-es", f.queEs), serie);
+    if (caja) {
+      serie.append("Producto original · Nº de serie ", el("b", null, caja.numero_serie),
+                   " · Caja ", el("b", null, caja.codigo));
+    } else {
+      serie.append("Caja ", el("b", null, codigo));
+    }
+    t.append(chip, el("h1", null, f.nombre), el("p", "que-es", f.queEs), serie);
+    return t;
+  }
 
-    var t2 = el("div", "tarjeta");
-    t2.append(el("h2", null, "Primeros pasos"));
+  function tarjetaPasos(f) {
+    var t = el("div", "tarjeta");
+    t.append(el("h2", null, "Primeros pasos"));
     var lista = document.createElement("ol");
     f.pasos.forEach(function (p) { lista.append(el("li", null, p)); });
-    t2.append(lista);
+    t.append(lista);
+    return t;
+  }
 
-    var boton = el("a", "boton", "Abrir en TrainLab");
+  function botonApp(f, codigo) {
+    var frag = document.createDocumentFragment();
+    var boton = el("a", "boton", "Abrir en " + f.app);
     boton.style.background = f.color; boton.style.color = f.tinta;
-    boton.href = "trainlab://caja/" + caja.codigo;
+    boton.href = f.esquema + "caja/" + codigo;
 
-    // Si la app no está instalada, el enlace trainlab:// no hace nada:
-    // pasado un momento sin que el sistema pause la página (la app en
-    // primer plano la congela), enseñamos el plan B de la beta.
+    // Si la app no está instalada, el enlace no hace nada: pasado un
+    // momento sin que el sistema pause la página (la app en primer
+    // plano la congela), enseñamos el plan B de la beta.
     var aviso = el("div", "aviso");
     var mail = el("a", null, SOPORTE);
-    mail.href = "mailto:" + SOPORTE + "?subject=" + encodeURIComponent("Acceso beta · caja " + caja.codigo);
+    mail.href = "mailto:" + SOPORTE + "?subject=" + encodeURIComponent("Acceso beta · caja " + codigo);
     aviso.append("¿No se ha abierto nada? TrainLab está en beta privada: escribe a ", mail,
                  " con este código y te enviamos la invitación con tu plan ya incluido.");
     boton.addEventListener("click", function () {
@@ -168,23 +195,68 @@
         if (Date.now() - t0 < 2400 && !document.hidden) aviso.classList.add("visible");
       }, 1800);
     });
+    frag.append(boton, aviso);
+    return frag;
+  }
 
-    var t3 = el("div", "tarjeta garantia");
-    t3.append(el("h2", null, "Garantía"));
+  // estado: "activada" | "pendiente" | "comprobando" | "sin-red"
+  function tarjetaGarantia(estado, caja, codigo) {
+    var t = el("div", "tarjeta garantia");
+    t.append(el("h2", null, "Garantía"));
     var g = el("p");
-    if (caja.activada_at) {
+    if (estado === "activada") {
       var fecha = new Date(caja.activada_at).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
-      var estado = el("span", "estado", "Activa"); estado.style.color = "#34C759";
-      g.append(estado, " desde el " + fecha + ". Cubre 3 años desde la activación; guarda esta caja o el código ",
+      var s = el("span", "estado", "Activa"); s.style.color = "#34C759";
+      g.append(s, " desde el " + fecha + ". Cubre 3 años; guarda esta caja o el código ",
                el("b", null, caja.codigo), " para cualquier gestión.");
+    } else if (estado === "pendiente") {
+      var p = el("span", "estado", "Pendiente de activar."); p.style.color = "#FF9500";
+      g.append(p, " Se registra a tu nombre al estrenar la app — y si prefieres, escríbenos con el código ",
+               el("b", null, codigo), " y la activamos nosotros. Cubre 3 años.");
+    } else if (estado === "sin-red") {
+      var r = el("span", "estado", "Ahora mismo no se puede comprobar."); r.style.color = "#79839A";
+      g.append(r, " Tu guía funciona igual; con conexión, recarga y verás el estado. La garantía de 3 años no depende de esta página.");
     } else {
-      var pendiente = el("span", "estado", "Pendiente de activar."); pendiente.style.color = "#FF9500";
-      g.append(pendiente, " Abre la app con el botón de arriba y la garantía de 3 años quedará registrada a tu nombre automáticamente.");
+      var c = el("span", "estado", "Comprobando…"); c.style.color = "#79839A";
+      g.append(c);
     }
-    t3.append(g);
+    t.append(g);
+    return t;
+  }
 
-    contenido.append(t1, t2, boton, aviso, t3);
-    pieSoporte("Soporte · caja " + caja.codigo);
+  function tarjetaFundador() {
+    var t = el("div", "tarjeta fundador");
+    t.append(
+      el("p", null, "Gracias por estar entre los primeros. TrainLab se construye pieza a pieza en España, y esta caja es de las primeras que salen. Si algo no va perfecto, escríbeme y lo arreglo yo mismo."),
+      el("p", "firma", "— José David, fundador de TrainLab")
+    );
+    return t;
+  }
+
+  // ---- Las páginas ----
+
+  function pintarCaja(producto, caja, codigo, estadoGarantia) {
+    var f = FICHAS[producto];
+    document.title = f.nombre + " · caja " + codigo;
+    contenido.textContent = "";
+    contenido.append(
+      tarjetaProducto(f, caja, codigo),
+      tarjetaPasos(f),
+      botonApp(f, codigo),
+      tarjetaGarantia(estadoGarantia, caja, codigo),
+      tarjetaFundador()
+    );
+    pieSoporte("Soporte · caja " + codigo);
+  }
+
+  function pintarPortada() {
+    document.title = "TrainLab · tu caja";
+    contenido.textContent = "";
+    var t = el("div", "tarjeta");
+    t.append(el("h1", null, "Tu caja TrainLab"),
+             el("p", "que-es", "Acerca el móvil al símbolo NFC de la caja (o escanea su código QR) y aquí aparecerán tu guía de primeros pasos y tu garantía."));
+    contenido.append(t);
+    pieSoporte("Mi caja TrainLab");
   }
 
   function pintarDesconocida(codigo) {
@@ -193,7 +265,7 @@
     var t = el("div", "tarjeta");
     var p = el("p", "que-es");
     p.style.marginTop = "8px";
-    p.append("El código ", el("b", null, codigo || "(vacío)"),
+    p.append("El código ", el("b", null, codigo),
       " no corresponde a ninguna caja registrada de TrainLab. Si acabas de comprar el producto, puede tratarse de un error de lectura — o de una unidad no original.");
     t.append(el("h1", null, "Código no reconocido"), p,
              el("p", "serie", "Escríbenos con una foto de la caja y lo comprobamos al momento."));
@@ -204,18 +276,32 @@
     pieSoporte("Código no reconocido · " + codigo);
   }
 
-  function pintarError() {
-    contenido.textContent = "";
-    var t = el("div", "tarjeta");
-    t.append(el("h1", null, "Sin conexión"),
-             el("p", "que-es", "No hemos podido leer los datos de tu caja. Comprueba la conexión y recarga la página."));
-    contenido.append(t);
-    pieSoporte("No carga el landing de la caja");
-  }
+  // ---- El arranque ----
 
   function arrancar() {
-    var codigo = decodeURIComponent(location.hash.replace(/^#/, "")).trim().toUpperCase();
-    if (!/^[A-HJ-NP-Z2-9]{6}$/.test(codigo)) { pintarDesconocida(codigo); return; }
+    var hash = decodeURIComponent(location.hash.replace(/^#/, "")).trim().toLowerCase();
+    if (!hash) { pintarPortada(); return; }
+
+    // #producto-CODIGO (el bueno) o #CODIGO (formato viejo, sigue vivo)
+    var producto = null, codigo = hash;
+    var guion = hash.indexOf("-");
+    if (guion > 0 && FICHAS[hash.slice(0, guion)]) {
+      producto = hash.slice(0, guion);
+      codigo = hash.slice(guion + 1);
+    }
+    codigo = codigo.toUpperCase();
+    if (!RE_CODIGO.test(codigo)) { pintarDesconocida(codigo || hash); return; }
+
+    // Con el producto en la mano, TODO lo útil se pinta ya, sin esperar
+    // a la red; la caché puede adelantar incluso la serie y la garantía.
+    var cacheada = cacheLeer(codigo);
+    if (producto) {
+      pintarCaja(producto, cacheada, codigo,
+                 cacheada ? (cacheada.activada_at ? "activada" : "pendiente") : "comprobando");
+    } else if (cacheada && FICHAS[cacheada.producto]) {
+      pintarCaja(cacheada.producto, cacheada, codigo,
+                 cacheada.activada_at ? "activada" : "pendiente");
+    }
 
     fetch(API + codigo, { headers: { Accept: "application/json" } })
       .then(function (r) {
@@ -223,8 +309,25 @@
         if (!r.ok) throw new Error("HTTP " + r.status);
         return r.json();
       })
-      .then(function (caja) { if (caja) pintarCaja(caja); })
-      .catch(pintarError);
+      .then(function (caja) {
+        if (!caja) return;
+        cacheGuardar(caja);
+        pintarCaja(caja.producto, caja, caja.codigo,
+                   caja.activada_at ? "activada" : "pendiente");
+      })
+      .catch(function () {
+        if (producto || cacheada) {
+          // La guía ya está en pantalla; solo la garantía queda sin comprobar.
+          pintarCaja(producto || cacheada.producto, cacheada, codigo, cacheada ? (cacheada.activada_at ? "activada" : "pendiente") : "sin-red");
+        } else {
+          contenido.textContent = "";
+          var t = el("div", "tarjeta");
+          t.append(el("h1", null, "Sin conexión"),
+                   el("p", "que-es", "No hemos podido leer los datos de tu caja. Comprueba la conexión y recarga la página."));
+          contenido.append(t);
+          pieSoporte("No carga el landing de la caja");
+        }
+      });
   }
 
   // Si el #hash llega o cambia después de cargar (algún navegador o
