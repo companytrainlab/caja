@@ -82,10 +82,24 @@
   .progreso{font-size:12.5px;color:#79839A;margin:-6px 0 12px}
   .progreso b{color:#EAEEF6}
 
-  /* La gráfica demo: lo que verás en la app, sin salir de la caja. */
-  .grafica{margin:2px 0 16px}
-  .grafica svg{width:100%;height:auto;display:block}
-  .grafica .leyenda{font-size:12px;color:#79839A;margin-top:7px;text-align:center;line-height:1.5}
+  /* La gráfica demo: una pantalla de la app recreada, sin salir de la caja. */
+  .grafica{margin:4px 0 18px;background:#101626;border:1px solid #202A3D;border-radius:14px;padding:15px 15px 13px}
+  .grafica svg{width:100%;height:auto;display:block;overflow:visible}
+  .viz-tit{font-size:14.5px;font-weight:700;color:#EAEEF6;line-height:1.35}
+  .viz-sub{font-size:11.5px;color:#79839A;margin:2px 0 12px;line-height:1.4}
+  .viz-badge{display:flex;align-items:baseline;gap:8px;margin:2px 0 12px}
+  .viz-badge .num{font-size:31px;font-weight:800;letter-spacing:-1px;line-height:1;white-space:nowrap}
+  .viz-badge .lab{font-size:12.5px;color:#AAB3C5;font-weight:600}
+  .viz-take{font-size:12.5px;color:#8A93A6;line-height:1.55;margin-top:11px;padding-top:11px;border-top:1px solid #202A3D}
+  /* La ciencia: método → autor → explicación, como la web de la marca. */
+  .cred{border-top:1px solid #232C3F;padding-top:15px;margin-top:17px}
+  .credhead{font-size:11.5px;font-weight:700;color:#AAB3C5;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+  .credsub{font-size:12.5px;color:#79839A;margin-bottom:15px;line-height:1.5}
+  .credit{margin-bottom:14px}
+  .credit:last-child{margin-bottom:0}
+  .credit .m{font-size:14px;font-weight:700;color:#EAEEF6;line-height:1.3}
+  .credit .a{font-size:12px;font-weight:600;margin:2px 0 4px}
+  .credit .x{font-size:12.5px;color:#8A93A6;line-height:1.5}
   .g-linea{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;
         stroke-dasharray:600;stroke-dashoffset:600;animation:trazar 1.6s .3s ease forwards}
   @keyframes trazar{to{stroke-dashoffset:0}}
@@ -135,14 +149,16 @@
       ],
       video: null, // cuando exista: "videos/control.mp4" en este mismo repo
       queHace: [
-        "Convierte tu sueño, tu pulso en reposo y tu variabilidad (HRV) en una disponibilidad diaria de 0 a 100.",
-        "Lee la tendencia, no el día suelto: te dice cuándo apretar y cuándo aflojar.",
-        "Comparte tu recuperación con tu entrenador para que la carga se ajuste a cómo llegas de verdad.",
+        "Convierte tu variabilidad cardiaca (HRV), tu pulso en reposo y tu sueño en una disponibilidad de 0 a 100 cada mañana.",
+        "Lee la tendencia de las últimas noches frente a tu base de 28 días, no el dato suelto que engaña.",
+        "Deja que tu entrenador vea tu recuperación, para que la carga de hoy se ajuste a cómo llegas de verdad.",
       ],
       ciencia: [
-        "Plews et al. (2013), Sports Medicine — la HRV como marcador de adaptación, interpretada en tendencia.",
-        "Saw et al. (2016), British Journal of Sports Medicine — el bienestar diario responde a la carga antes que muchos marcadores objetivos.",
-        "Kenttä y Hassmén (1998), Sports Medicine — el modelo de recuperación total que usa el motor de Control.",
+        { metodo: "VFC en tendencia", autor: "Plews et al., 2013 · Sports Medicine", texto: "La variabilidad cardiaca se lee como media móvil de varios días: así refleja adaptación real y no el ruido de una sola noche." },
+        { metodo: "Monitorización por frecuencia cardiaca", autor: "Buchheit, 2014 · Frontiers in Physiology", texto: "El pulso de reposo y su variabilidad como ventana diaria, sencilla y fiable, al estado de forma y la fatiga." },
+        { metodo: "Bienestar subjetivo", autor: "Saw, Main y Gastin, 2016 · Br J Sports Med", texto: "Las respuestas del propio atleta detectan la respuesta a la carga antes que muchos marcadores objetivos y de laboratorio." },
+        { metodo: "Sueño y rendimiento", autor: "Fullagar et al., 2015 · Sports Medicine", texto: "El sueño insuficiente degrada la recuperación y el rendimiento; por eso Control lo pone en primer plano." },
+        { metodo: "Modelo de recuperación total", autor: "Kenttä y Hassmén, 1998 · Sports Medicine", texto: "El equilibrio entre estrés y recuperación que sostiene, por debajo, el índice de disponibilidad." },
       ],
     },
     velocity: {
@@ -157,14 +173,16 @@
       ],
       video: null,
       queHace: [
-        "Mide la velocidad de cada repetición y estima tu 1RM sin necesidad de ir al fallo.",
-        "Ajusta la carga del día según cómo llegas: entrenamiento basado en velocidad (VBT).",
-        "Corta la serie por pérdida de velocidad, antes de acumular fatiga que no suma.",
+        "Mide la velocidad de cada repetición en tiempo real y estima tu 1RM del día sin ir al fallo.",
+        "Ajusta la carga a cómo llegas hoy con entrenamiento basado en velocidad (VBT), no con el porcentaje teórico de la tabla.",
+        "Corta la serie cuando pierdes el 20 % de velocidad: la misma fuerza, con menos fatiga y menos daño muscular.",
       ],
       ciencia: [
-        "González-Badillo y Sánchez-Medina (2010), International Journal of Sports Medicine — la velocidad como medida de la intensidad real.",
-        "Sánchez-Medina y González-Badillo (2011), Medicine & Science in Sports & Exercise — la pérdida de velocidad como indicador de fatiga neuromuscular.",
-        "Jidovtseff et al. (2011), Journal of Strength and Conditioning Research — la relación carga-velocidad para estimar el 1RM.",
+        { metodo: "Velocidad = intensidad", autor: "González-Badillo y Sánchez-Medina, 2010 · Int J Sports Med", texto: "La velocidad de la barra mide la intensidad real de la serie mejor que el porcentaje teórico del 1RM." },
+        { metodo: "Pérdida de velocidad = fatiga", autor: "Sánchez-Medina y González-Badillo, 2011 · Med Sci Sports Exerc", texto: "Cuánta velocidad pierdes dentro de la serie es un indicador directo de la fatiga neuromuscular acumulada." },
+        { metodo: "Umbral de corte de la serie", autor: "Pareja-Blanco et al., 2017 · Scand J Med Sci Sports", texto: "Detener la serie a una pérdida fija de velocidad logra ganancias de fuerza similares con menos fatiga y menos daño." },
+        { metodo: "Carga–velocidad para el 1RM", autor: "Jidovtseff et al., 2011 · J Strength Cond Res", texto: "La relación entre carga y velocidad estima tu máximo del día sin necesidad de un test al fallo." },
+        { metodo: "VBT en la práctica", autor: "Weakley et al., 2021 · Strength Cond J", texto: "Revisión de referencia sobre cómo llevar el entrenamiento basado en velocidad de la teoría al gimnasio." },
       ],
     },
     force: {
@@ -180,13 +198,15 @@
       video: null,
       queHace: [
         "Mide tu fuerza máxima isométrica y tu explosividad (RFD) sin mover cargas peligrosas.",
-        "Compara izquierda y derecha: las asimetrías por encima del 10-15 % encienden el semáforo.",
-        "Sigue tu readaptación con datos objetivos, test a test.",
+        "Compara pierna con pierna: al bajar del 90 % de simetría (LSI), el semáforo avisa.",
+        "Convierte el alta de una lesión en una decisión con números: la simetría sube, test a test, hasta el criterio.",
       ],
       ciencia: [
-        "Bishop, Turner y Read (2018), Journal of Sports Sciences — las asimetrías entre lados y su efecto en el rendimiento.",
-        "Ardern et al. (2016), British Journal of Sports Medicine — el consenso de Berna sobre la vuelta al deporte.",
-        "Buckthorpe (2019), Sports Medicine — criterios objetivos en la fase final de la readaptación.",
+        { metodo: "Asimetrías entre lados", autor: "Bishop, Turner y Read, 2018 · J Sports Sci", texto: "Las diferencias entre lado dominante y no dominante se asocian a peor rendimiento y más riesgo; el umbral de alerta ronda el 10–15 %." },
+        { metodo: "Tracción isométrica (IMTP)", autor: "Comfort et al., 2019 · Strength Cond J", texto: "El protocolo estandarizado del test isométrico de fuerza y explosividad (RFD) que implementa Force." },
+        { metodo: "Vuelta al deporte", autor: "Consenso de Berna — Ardern et al., 2016 · Br J Sports Med", texto: "Los criterios internacionales que convierten el alta de una lesión en una decisión con datos, no una sensación." },
+        { metodo: "Reglas de decisión objetivas", autor: "Grindem et al., 2016 · Br J Sports Med", texto: "Retrasar la vuelta y superar tests de fuerza y simetría reduce drásticamente la recaída tras una reconstrucción de LCA." },
+        { metodo: "Readaptación de fase final", autor: "Buckthorpe, 2019 · Sports Medicine", texto: "Criterios de fuerza y simetría para las últimas fases de la readaptación antes del alta deportiva." },
       ],
     },
     signal: {
@@ -201,13 +221,16 @@
       ],
       video: null,
       queHace: [
-        "Mide la activación real del músculo (EMG de superficie) mientras trabajas.",
-        "Expresa cada ejercicio como porcentaje de tu contracción máxima (MVC): intensidad comparable entre días.",
+        "Mide la activación real del músculo con EMG de superficie mientras entrenas, no la que supones.",
+        "Expresa cada ejercicio como porcentaje de tu contracción máxima (MVC): comparable entre días y entre personas.",
         "Detecta asimetrías de activación en la readaptación antes de que se vean a simple vista.",
       ],
       ciencia: [
-        "Hermens et al. (2000), Journal of Electromyography and Kinesiology — SENIAM, el estándar europeo de colocación y registro de EMG de superficie.",
-        "De Luca (1997), Journal of Applied Biomechanics — el uso correcto de la electromiografía de superficie en biomecánica.",
+        { metodo: "SENIAM", autor: "Hermens et al., 2000 · J Electromyogr Kinesiol", texto: "El estándar europeo de colocación de electrodos y registro de la EMG de superficie que sigue Signal." },
+        { metodo: "EMG de superficie", autor: "De Luca, 1997 · J Appl Biomech", texto: "Los fundamentos del uso correcto de la electromiografía de superficie en el estudio del movimiento humano." },
+        { metodo: "Normalizar al MVC", autor: "Burden, 2010 · J Electromyogr Kinesiol", texto: "Expresar la señal como porcentaje de la contracción máxima es lo que hace comparables las medidas entre sesiones." },
+        { metodo: "Leer la amplitud", autor: "Vigotsky et al., 2018 · Frontiers in Physiology", texto: "Cómo interpretar —y cómo no— la amplitud de la señal EMG en el deporte y la readaptación." },
+        { metodo: "Obra de referencia", autor: "Merletti y Farina, 2016 · Wiley–IEEE Press", texto: "El tratado de fisiología, ingeniería y aplicaciones de la electromiografía de superficie." },
       ],
     },
   };
@@ -348,85 +371,120 @@
     return t;
   }
 
-  // La gráfica demo de cada producto: SVG propio, datos de ejemplo,
-  // cero librerías. Es estática y nuestra (sin datos de fuera), así
-  // que puede ir por innerHTML sin riesgo.
+  // La gráfica demo de cada producto: una pantalla de la app recreada
+  // con datos de ejemplo, SVG propio y cero librerías. Devuelve título,
+  // subtítulo, badge, el SVG y la frase de conclusión. Es estática y
+  // nuestra (sin datos de fuera), así que el SVG va por innerHTML.
   function graficaDe(producto, color) {
-    var eje = '#232C3F', texto = '#79839A';
+    var eje = '#26314A', texto = '#79839A', W = 340;
     if (producto === "control") {
-      // Disponibilidad de una semana: la tendencia manda.
-      var v = [62, 58, 71, 76, 69, 83, 88], dias = ["L", "M", "X", "J", "V", "S", "D"];
-      var pts = v.map(function (n, i) { return (20 + i * 50) + "," + (125 - n); }).join(" ");
-      var puntos = v.map(function (n, i) {
-        return '<circle class="g-punto" style="animation-delay:' + (0.3 + i * 0.18) + 's" cx="' + (20 + i * 50) + '" cy="' + (125 - n) + '" r="4" fill="' + color + '"/>';
-      }).join("");
-      var etiquetas = dias.map(function (d, i) {
-        return '<text x="' + (20 + i * 50) + '" y="139" font-size="10" fill="' + texto + '" text-anchor="middle">' + d + '</text>';
-      }).join("");
+      // VFC de 14 noches contra la base de 28 días: manda la tendencia.
+      var v = [66, 63, 68, 65, 61, 58, 52, 60, 64, 67, 63, 66, 69, 71], base = 64;
+      var x = function (i) { return 16 + i * (308 / 13); };
+      var y = function (n) { return 122 - (n - 45) * 2.3; };
+      var pts = v.map(function (n, i) { return x(i).toFixed(1) + "," + y(n).toFixed(1); }).join(" ");
+      var dip = 6; // la noche corta
       return {
-        svg: '<svg viewBox="0 0 340 142" aria-hidden="true">' +
-          '<line x1="12" y1="25" x2="328" y2="25" stroke="' + eje + '" stroke-dasharray="3 4"/>' +
-          '<line x1="12" y1="75" x2="328" y2="75" stroke="' + eje + '" stroke-dasharray="3 4"/>' +
-          '<text x="330" y="28" font-size="9" fill="' + texto + '" text-anchor="end">100</text>' +
+        titulo: "Cómo llegas hoy",
+        subtitulo: "VFC de 14 noches frente a tu base de 28 días · datos de ejemplo",
+        badge: { num: "83", lab: "Disponibilidad · listo para entrenar" },
+        svg: '<svg viewBox="0 0 340 138" aria-hidden="true">' +
+          '<line x1="12" y1="' + y(base) + '" x2="328" y2="' + y(base) + '" stroke="' + eje + '" stroke-dasharray="4 4"/>' +
+          '<text x="14" y="' + (y(base) - 6) + '" font-size="10" fill="' + texto + '">base 28 días</text>' +
           '<polyline class="g-linea" points="' + pts + '" stroke="' + color + '"/>' +
-          puntos + etiquetas + '</svg>',
-        leyenda: "Tu disponibilidad diaria, en tendencia: la app te dice cuándo apretar y cuándo aflojar.",
+          '<circle class="g-punto" style="animation-delay:1.4s" cx="' + x(dip) + '" cy="' + y(v[dip]) + '" r="4.5" fill="#FF9500"/>' +
+          '<text class="g-punto" style="animation-delay:1.6s" x="' + x(dip) + '" y="' + (y(v[dip]) + 20) + '" font-size="10" fill="#FF9500" text-anchor="middle">noche corta</text>' +
+          '<circle class="g-punto" style="animation-delay:1.5s" cx="' + x(13) + '" cy="' + y(v[13]) + '" r="4.5" fill="' + color + '"/>' +
+          '</svg>',
+        take: "La noche corta se ve al momento, y Control baja la carga de hoy sin que se lo pidas.",
       };
     }
     if (producto === "velocity") {
       // Velocidad por repetición: la serie se corta antes de la fatiga inútil.
-      var reps = [0.82, 0.79, 0.76, 0.71, 0.65, 0.58];
-      var corteY = 125 - 0.82 * 0.8 * 130;
+      var reps = [0.82, 0.80, 0.77, 0.72, 0.65, 0.57], v0 = 0.82;
+      var bx = function (i) { return 20 + i * 52; };
+      var by = function (val) { return 120 - val * 118; };
+      var corteY = by(v0 * 0.8);
       var barras = reps.map(function (n, i) {
-        var h = n * 130, lenta = n < 0.82 * 0.8;
-        return '<rect class="g-barra" style="animation-delay:' + (0.15 + i * 0.12) + 's" x="' + (25 + i * 50) + '" y="' + (125 - h) + '" width="34" height="' + h + '" rx="5" fill="' + color + '"' + (lenta ? ' opacity="0.3"' : '') + '/>';
+        var top = by(n), lenta = n < v0 * 0.8;
+        return '<rect class="g-barra" style="animation-delay:' + (0.15 + i * 0.12) + 's" x="' + bx(i) + '" y="' + top + '" width="34" height="' + (120 - top) + '" rx="5" fill="' + color + '"' + (lenta ? ' opacity="0.28"' : '') + '/>' +
+          '<text x="' + (bx(i) + 17) + '" y="133" font-size="9.5" fill="' + texto + '" text-anchor="middle">R' + (i + 1) + '</text>';
       }).join("");
       return {
-        svg: '<svg viewBox="0 0 340 142" aria-hidden="true">' + barras +
-          '<line x1="12" y1="' + corteY + '" x2="328" y2="' + corteY + '" stroke="' + texto + '" stroke-dasharray="4 4"/>' +
-          '<text x="326" y="' + (corteY - 5) + '" font-size="9.5" fill="' + texto + '" text-anchor="end">corte −20 %</text>' +
-          '<text x="20" y="139" font-size="10" fill="' + texto + '">velocidad de cada repetición (m/s)</text></svg>',
-        leyenda: "Cuando la barra pierde el 20 % de velocidad, la app corta la serie: fatiga que no suma.",
+        titulo: "Una serie al 75 %, repetición a repetición",
+        subtitulo: "velocidad de cada repetición (m/s) · corte al perder el 20 % · datos de ejemplo",
+        badge: { num: "0,82", lab: "m/s · la 1ª repetición manda" },
+        svg: '<svg viewBox="0 0 340 138" aria-hidden="true">' + barras +
+          '<line x1="12" y1="' + corteY + '" x2="328" y2="' + corteY + '" stroke="#FF9500" stroke-dasharray="4 4"/>' +
+          '<text x="326" y="' + (corteY - 5) + '" font-size="10" fill="#FF9500" text-anchor="end">corta aquí · −20 %</text></svg>',
+        take: "La primera repetición es la que cuenta: al perder el 20 % de velocidad, la serie ya cumplió y las repeticiones grises sobran.",
       };
     }
     if (producto === "force") {
-      // Izquierda contra derecha: la asimetría se ve de un vistazo.
+      // La simetría entre piernas subiendo hasta el criterio de alta.
+      var lsi = [55, 61, 68, 74, 81, 87, 92], crit = 90;
+      var fx = function (i) { return 22 + i * (300 / 6); };
+      var fy = function (p) { return 120 - (p - 45) * 1.75; };
+      var lpts = lsi.map(function (p, i) { return fx(i).toFixed(1) + "," + fy(p).toFixed(1); }).join(" ");
+      var puntos = lsi.map(function (p, i) {
+        var alta = p >= crit;
+        return '<circle class="g-punto" style="animation-delay:' + (0.4 + i * 0.2) + 's" cx="' + fx(i) + '" cy="' + fy(p) + '" r="' + (alta ? 5.5 : 4) + '" fill="' + (alta ? "#34C759" : color) + '"/>';
+      }).join("");
       return {
-        svg: '<svg viewBox="0 0 340 118" aria-hidden="true">' +
-          '<text x="14" y="43" font-size="11" fill="' + texto + '">Izq</text>' +
-          '<rect class="g-hbarra" x="48" y="26" width="252" height="26" rx="7" fill="' + color + '"/>' +
-          '<text x="292" y="43" font-size="11" font-weight="700" fill="#141A28" text-anchor="end">412 N</text>' +
-          '<text x="14" y="90" font-size="11" fill="' + texto + '">Der</text>' +
-          '<rect class="g-hbarra" style="animation-delay:.4s" x="48" y="73" width="227" height="26" rx="7" fill="' + color + '" opacity="0.55"/>' +
-          '<text x="267" y="90" font-size="11" font-weight="700" fill="#141A28" text-anchor="end">371 N</text>' +
-          '</svg>',
-        leyenda: "Fuerza máxima de cada lado: al bajar del 90 % de simetría, el semáforo avisa.",
+        titulo: "Una readaptación: la simetría, test a test",
+        subtitulo: "LSI, pierna lesionada frente a sana · criterio de alta 90 % · datos de ejemplo",
+        badge: { num: "92 %", lab: "LSI · criterio alcanzado", color: "#34C759" },
+        svg: '<svg viewBox="0 0 340 138" aria-hidden="true">' +
+          '<line x1="12" y1="' + fy(crit) + '" x2="328" y2="' + fy(crit) + '" stroke="#34C759" stroke-dasharray="4 4"/>' +
+          '<text x="14" y="' + (fy(crit) - 6) + '" font-size="10" fill="#34C759">criterio · 90 %</text>' +
+          '<polyline class="g-linea" points="' + lpts + '" stroke="' + color + '"/>' + puntos +
+          '<text x="22" y="133" font-size="9.5" fill="' + texto + '">test 1</text>' +
+          '<text x="322" y="133" font-size="9.5" fill="' + texto + '" text-anchor="end">test 7</text></svg>',
+        take: "La vuelta al deporte deja de ser una sensación: la pierna alcanza el criterio y el alta se decide con un número.",
       };
     }
-    // signal: la envolvente EMG de dos repeticiones frente al máximo.
+    // signal: la envolvente EMG de dos repeticiones contra el MVC.
+    var trazo = "M14,112 C40,112 48,40 82,38 C112,36 118,96 150,102 C166,105 172,112 186,112 C210,112 218,46 250,44 C278,42 286,98 326,108";
     return {
+      titulo: "Lo que ve Signal: la activación del músculo",
+      subtitulo: "EMG de superficie en dos repeticiones · frente al 100 % de tu MVC · concepto",
+      badge: { num: "94 %", lab: "del MVC · pico de la 2ª repetición" },
       svg: '<svg viewBox="0 0 340 132" aria-hidden="true">' +
-        '<line x1="12" y1="26" x2="328" y2="26" stroke="' + texto + '" stroke-dasharray="4 4"/>' +
-        '<text x="326" y="21" font-size="9.5" fill="' + texto + '" text-anchor="end">100 % MVC</text>' +
-        '<path d="M14,112 C40,112 48,40 82,38 C112,36 118,96 150,102 C166,105 172,112 186,112 C210,112 218,48 250,46 C278,44 286,98 326,108" ' +
-        'fill="' + color + '" fill-opacity="0.13" stroke="none"/>' +
-        '<path class="g-linea" d="M14,112 C40,112 48,40 82,38 C112,36 118,96 150,102 C166,105 172,112 186,112 C210,112 218,48 250,46 C278,44 286,98 326,108" stroke="' + color + '"/>' +
-        '<text x="20" y="128" font-size="10" fill="' + texto + '">activación muscular en dos repeticiones</text></svg>',
-      leyenda: "La activación real del músculo, medida contra tu contracción máxima (MVC).",
+        '<line x1="12" y1="30" x2="328" y2="30" stroke="' + texto + '" stroke-dasharray="4 4"/>' +
+        '<text x="326" y="25" font-size="10" fill="' + texto + '" text-anchor="end">100 % MVC</text>' +
+        '<path d="' + trazo + '" fill="' + color + '" fill-opacity="0.13" stroke="none"/>' +
+        '<path class="g-linea" d="' + trazo + '" stroke="' + color + '"/>' +
+        '<circle class="g-punto" style="animation-delay:1.6s" cx="250" cy="44" r="4" fill="' + color + '"/>' +
+        '<text class="g-punto" style="animation-delay:1.7s" x="250" y="34" font-size="10" fill="' + color + '" text-anchor="middle">pico</text>' +
+        '<text x="20" y="128" font-size="9.5" fill="' + texto + '">repetición 1</text>' +
+        '<text x="248" y="128" font-size="9.5" fill="' + texto + '">repetición 2</text></svg>',
+      take: "El músculo que debía trabajar, trabajando: la activación se ve, se compara entre lados y se sigue en el tiempo.",
     };
   }
 
-  // Qué hace la app y en qué ciencia se apoya. Las referencias salen del
-  // documento de fundamento científico de TrainLab: aquí no se promete
-  // nada que el dossier no pueda defender.
+  // "Qué hace la app": una pantalla recreada + qué hace + la ciencia que
+  // lo sostiene. Las referencias salen del documento de fundamento
+  // científico de TrainLab: aquí no se promete nada que el dossier no
+  // pueda defender. Regla de la casa: ningún número sin una referencia.
   function tarjetaApp(f, producto) {
     var t = el("div", "tarjeta");
     t.append(el("h2", null, "Qué hace " + f.app));
+
     var g = graficaDe(producto, f.color);
-    var grafica = el("div", "grafica");
-    grafica.innerHTML = g.svg + '<p class="leyenda"></p>';
-    grafica.querySelector(".leyenda").textContent = g.leyenda;
-    t.append(grafica);
+    var box = el("div", "grafica");
+    box.append(el("div", "viz-tit", g.titulo), el("div", "viz-sub", g.subtitulo));
+    if (g.badge) {
+      var badge = el("div", "viz-badge");
+      var num = el("span", "num", g.badge.num);
+      num.style.color = g.badge.color || f.color;
+      badge.append(num, el("span", "lab", g.badge.lab));
+      box.append(badge);
+    }
+    var svgWrap = el("div");
+    svgWrap.innerHTML = g.svg;
+    box.append(svgWrap, el("div", "viz-take", g.take));
+    t.append(box);
+
     var ul = el("ul", "applista");
     f.queHace.forEach(function (q) {
       var li = el("li");
@@ -435,10 +493,20 @@
       li.append(check, el("span", null, q));
       ul.append(li);
     });
-    var refs = el("div", "refs");
-    refs.append(el("p", "reftit", "La ciencia que lo sostiene"));
-    f.ciencia.forEach(function (r) { refs.append(el("p", null, r)); });
-    t.append(ul, refs);
+    t.append(ul);
+
+    var cred = el("div", "cred");
+    cred.append(
+      el("div", "credhead", "La ciencia que lo sostiene"),
+      el("div", "credsub", "TrainLab no inventa métricas: implementa métodos publicados y revisados por pares. Ningún número sin una referencia detrás.")
+    );
+    f.ciencia.forEach(function (r) {
+      var c = el("div", "credit");
+      var a = el("div", "a", r.autor); a.style.color = f.color;
+      c.append(el("div", "m", r.metodo), a, el("div", "x", r.texto));
+      cred.append(c);
+    });
+    t.append(cred);
     return t;
   }
 
