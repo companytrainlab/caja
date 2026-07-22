@@ -174,11 +174,11 @@
       ],
       video: null, // cuando exista: "videos/control.mp4" en este mismo repo
       capturas: [
-        { src: "capturas/control-analisis.png", cap: "Análisis: disponibilidad diaria, carga y tendencia del atleta." },
-        { src: "capturas/control-valoracion.png", cap: "Valoración: batería de tests de fuerza, salto, ROM y más." },
-        { src: "capturas/control-resumen.png", cap: "Panel del entrenador: carga, alertas y atletas de un vistazo." },
-        { src: "capturas/control-agenda.png", cap: "Agenda: sesiones y citas en un calendario." },
-        { src: "capturas/control-plan.png", cap: "Plan: la programación del atleta, por disciplina." },
+        { src: "capturas/control-recup.png", cap: "Recuperación: tu HRV, FC en reposo y sueño frente a tu base, día a día." },
+        { src: "capturas/control-analisis.png", cap: "Análisis: estado de forma, riesgo de sobreentrenamiento y lecturas automáticas." },
+        { src: "capturas/control-hoy.png", cap: "Hoy: tu registro diario y la disponibilidad para entrenar." },
+        { src: "capturas/control-semana.png", cap: "Semana: carga, cumplimiento OMS y la recomendación de la semana." },
+        { src: "capturas/control-pulsera.png", cap: "Pulsera: tu dispositivo, batería y sincronización." },
       ],
       queHace: [
         "Convierte tu variabilidad cardiaca (HRV), tu pulso en reposo y tu sueño en una disponibilidad de 0 a 100 cada mañana.",
@@ -590,7 +590,7 @@
         marco.append(img, el("figcaption", null, c.cap || ""));
         fila.append(marco);
       });
-      t.append(el("p", "viz-sub", "Desliza para ver Análisis, carga, recuperación y más. Datos de ejemplo."), fila);
+      t.append(el("p", "viz-sub", "Desliza para ver recuperación, análisis y tu día a día. Datos de ejemplo."), fila);
     } else {
       var ph = el("div", "video-ph");
       ph.append(
