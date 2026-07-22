@@ -65,6 +65,17 @@
   .aviso a{color:#2E7DF6;text-decoration:none}
   .garantia{font-size:13.5px;line-height:1.5;color:#AAB3C5}
   .garantia .estado{font-weight:700}
+  /* El cupón: el código de la caja, destacado como lo que es. */
+  .cupon{display:flex;align-items:center;justify-content:space-between;gap:12px;
+        background:#101626;border:1px dashed #2A3448;border-radius:12px;padding:12px 16px;margin:2px 0 14px}
+  .cupon-lab{font-size:11.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#79839A}
+  .cupon-cod{font-size:22px;font-weight:800;letter-spacing:3px;color:#EAEEF6;
+        font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  /* La app por dentro: capturas en marcos de móvil, scroll horizontal. */
+  .galeria{display:flex;gap:12px;overflow-x:auto;padding:2px 2px 6px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+  .shot{flex:0 0 66%;scroll-snap-align:center;margin:0}
+  .shot img{width:100%;border-radius:16px;border:1px solid #232C3F;display:block;background:#101626}
+  .shot figcaption{font-size:12px;color:#79839A;margin-top:8px;line-height:1.4}
   .fundador{font-size:13.5px;line-height:1.6;color:#AAB3C5;border-left:3px solid #2E7DF6}
   .fundador .firma{margin-top:8px;color:#79839A;font-size:12.5px}
   .applista{list-style:none}
@@ -152,12 +163,12 @@
   // entera sin red porque el producto viene en el propio hash.
   var FICHAS = {
     control: {
-      nombre: "TrainLab Control", app: "TrainLab", esquema: "trainlab://",
+      nombre: "TrainLab Control", app: "Control", esquema: "trainlab://",
       color: "#AF52DE", tinta: "#FFFFFF",
       queEs: "Tu pulsera de recuperación: mide el corazón, el sueño y la variabilidad para saber cuándo apretar y cuándo aflojar.",
       pasos: [
         "Carga la pulsera con su cable hasta que la pantalla se encienda.",
-        "Abre TrainLab en tu iPhone (botón de abajo).",
+        "Abre la app de Control en tu iPhone (botón de abajo).",
         "Entra en Salud → Pulsera y toca Buscar pulsera con el Bluetooth activado.",
         "Duerme con ella esta noche: mañana verás tu sueño, pulso en reposo y HRV.",
       ],
@@ -176,12 +187,12 @@
       ],
     },
     velocity: {
-      nombre: "TrainLab Velocity", app: "TrainLab Velocity", esquema: "trainlabvelocity://",
+      nombre: "TrainLab Velocity", app: "Velocity", esquema: "trainlabvelocity://",
       color: "#17AEC9", tinta: "#FFFFFF",
       queEs: "El sensor de barra: mide la velocidad de cada repetición para entrenar con cargas óptimas.",
       pasos: [
         "Fija el sensor a la barra con el imán y asegúralo con la correa de velcro.",
-        "Abre TrainLab Velocity (botón de abajo).",
+        "Abre la app de Velocity en tu iPhone (botón de abajo).",
         "Empareja el sensor por Bluetooth desde la pantalla de inicio.",
         "Haz una serie: verás la velocidad de cada repetición al momento.",
       ],
@@ -200,12 +211,12 @@
       ],
     },
     force: {
-      nombre: "TrainLab Force", app: "TrainLab Force", esquema: "trainlabforce://",
+      nombre: "TrainLab Force", app: "Force", esquema: "trainlabforce://",
       color: "#FF9500", tinta: "#141A28",
       queEs: "El dinamómetro: mide la fuerza máxima y la simetría entre lados en tests isométricos.",
       pasos: [
         "Ancla la célula de carga entre el punto fijo y el agarre, sin holguras.",
-        "Abre TrainLab Force (botón de abajo).",
+        "Abre la app de Force en tu iPhone (botón de abajo).",
         "Conecta el dinamómetro por Bluetooth.",
         "Antes del primer test, sigue la calibración guiada de la app.",
       ],
@@ -224,12 +235,12 @@
       ],
     },
     signal: {
-      nombre: "TrainLab Signal", app: "TrainLab Signal", esquema: "trainlabsignal://",
+      nombre: "TrainLab Signal", app: "Signal", esquema: "trainlabsignal://",
       color: "#FFD60A", tinta: "#141A28",
       queEs: "El sensor EMG: mide la activación muscular real para valorar readaptaciones y asimetrías.",
       pasos: [
         "Limpia la piel y coloca los electrodos sobre el vientre del músculo.",
-        "Abre TrainLab Signal (botón de abajo).",
+        "Abre la app de Signal en tu iPhone (botón de abajo).",
         "Conecta el sensor por Bluetooth.",
         "Haz una contracción máxima (MVC) para calibrar la escala.",
       ],
@@ -310,7 +321,7 @@
       if (n === f.pasos.length) {
         progreso.append("¡Lista! Tu ", el("b", null, f.app.replace("TrainLab ", "") || "caja"), " está en marcha. 🎉");
       } else {
-        progreso.append("Toca cada paso al completarlo — llevas ", el("b", null, n + " de " + f.pasos.length), ".");
+        progreso.append("Toca cada paso al completarlo. Llevas ", el("b", null, n + " de " + f.pasos.length), ".");
       }
     }
 
@@ -338,7 +349,7 @@
 
   function botonApp(f, codigo) {
     var frag = document.createDocumentFragment();
-    var boton = el("a", "boton", "Abrir en " + f.app);
+    var boton = el("a", "boton", "Abrir " + f.app);
     boton.style.background = f.color; boton.style.color = f.tinta;
     boton.href = f.esquema + "caja/" + codigo;
 
@@ -360,25 +371,32 @@
     return frag;
   }
 
+  // El regalo de la caja: la app del producto GRATIS de por vida. El
+  // código de la caja es el cupón; se canjea UNA sola vez y queda ligado
+  // a UNA única cuenta (lo garantiza el backend: activada_por/activada_at).
   // estado: "activada" | "pendiente" | "comprobando" | "sin-red"
-  function tarjetaGarantia(estado, caja, codigo) {
+  function tarjetaPlan(estado, caja, codigo, f) {
     var t = el("div", "tarjeta garantia");
-    t.append(el("h2", null, "Garantía"));
+    t.append(el("h2", null, f.app + " gratis, de por vida"));
+
+    // El código, destacado: es el cupón.
+    var cupon = el("div", "cupon");
+    cupon.append(el("span", "cupon-lab", "Tu código"), el("span", "cupon-cod", codigo));
+    t.append(cupon);
+
     var g = el("p");
     if (estado === "activada") {
       var fecha = new Date(caja.activada_at).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
-      var s = el("span", "estado", "Activa"); s.style.color = "#34C759";
-      g.append(s, " desde el " + fecha + ". Cubre 3 años; guarda esta caja o el código ",
-               el("b", null, caja.codigo), " para cualquier gestión.");
+      var s = el("span", "estado", "Canjeado"); s.style.color = "#34C759";
+      g.append(s, " el " + fecha + ": tienes " + f.app + " gratis para siempre en tu cuenta. El código ya está usado — se valida una sola vez, en una única cuenta.");
     } else if (estado === "pendiente") {
-      var p = el("span", "estado", "Pendiente de activar."); p.style.color = "#FF9500";
-      g.append(p, " Se registra a tu nombre al estrenar la app — y si prefieres, escríbenos con el código ",
-               el("b", null, codigo), " y la activamos nosotros. Cubre 3 años.");
+      var p = el("span", "estado", "Sin canjear."); p.style.color = f.color;
+      g.append(p, " Esta caja incluye " + f.app + " gratis de por vida. Al estrenar la app, el código lo activa solo — o escríbenos y lo hacemos nosotros. Solo puede validarse una vez y queda ligado a una única cuenta, así que canjéalo en la tuya.");
     } else if (estado === "sin-red") {
       var r = el("span", "estado", "Ahora mismo no se puede comprobar."); r.style.color = "#79839A";
-      g.append(r, " Tu guía funciona igual; con conexión, recarga y verás el estado. La garantía de 3 años no depende de esta página.");
+      g.append(r, " Tu guía funciona igual; con conexión, recarga y verás si el código sigue disponible. Guárdalo: es tu " + f.app + " gratis de por vida.");
     } else {
-      var c = el("span", "estado", "Comprobando…"); c.style.color = "#79839A";
+      var c = el("span", "estado", "Comprobando el código…"); c.style.color = "#79839A";
       g.append(c);
     }
     t.append(g);
@@ -548,6 +566,36 @@
     return t;
   }
 
+  // La app por dentro: capturas reales (Análisis y otras pantallas de
+  // valor) en marcos de móvil, con scroll horizontal. Las imágenes viven
+  // en `capturas/<producto>-N.png` de este repo; hasta que existan, un
+  // hueco elegante. f.capturas = [{src, cap}, ...].
+  function tarjetaCapturas(f) {
+    var caps = f.capturas || [];
+    var t = el("div", "tarjeta");
+    t.append(el("h2", null, "La app por dentro"));
+    if (caps.length) {
+      var fila = el("div", "galeria");
+      caps.forEach(function (c) {
+        var marco = el("figure", "shot");
+        var img = document.createElement("img");
+        img.src = c.src; img.alt = c.cap || (f.app + " · captura"); img.loading = "lazy";
+        marco.append(img, el("figcaption", null, c.cap || ""));
+        fila.append(marco);
+      });
+      t.append(el("p", "viz-sub", "Desliza para ver Análisis, carga, recuperación y más. Datos de ejemplo."), fila);
+    } else {
+      var ph = el("div", "video-ph");
+      ph.append(
+        el("div", "play", "📊"),
+        el("span", null, "Estamos preparando las capturas de " + f.app + "."),
+        el("span", null, "Análisis, carga, recuperación y las pantallas de valor.")
+      );
+      t.append(ph);
+    }
+    return t;
+  }
+
   function botonWeb() {
     var b = el("a", "boton-sec", "Descubrir TrainLab");
     b.href = WEB;
@@ -575,7 +623,8 @@
       botonApp(f, codigo),
       tarjetaVideo(f),
       tarjetaApp(f, producto),
-      tarjetaGarantia(estadoGarantia, caja, codigo),
+      tarjetaCapturas(f),
+      tarjetaPlan(estadoGarantia, caja, codigo, f),
       tarjetaFundador(),
       botonWeb()
     );
